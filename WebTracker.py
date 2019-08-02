@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 import time
 
-#TODO Add image URL to dictionaries
+#TODO Better HTML Design
 
 #CONSTANTS
 URL = "https://www.telepizza.es/productos/menus"
@@ -33,7 +33,7 @@ def read_data():
     file = open("ofertas.json","r")
     return json.load(file) #Returns dictionary
 
-def send_email(menu, prev_price, now_price):
+def send_email(menu, prev_price, now_price, imageSrc):
     server = smtplib.SMTP('smtp.gmail.com',587)
     server.ehlo()
     server.starttls()
@@ -42,7 +42,7 @@ def send_email(menu, prev_price, now_price):
     server.login(from_addr,password)
     subject = "Precio bajado en: " + menu
 
-    msg = MIMEText('<!DOCTYPE html><html><body><p>Mira el link: '+ URL +'</p><img src="https://images.telepizza.com/vol/es/images/content/promociones/nm003_c.png" /><br><br><p> Ha pasado de: ' + str(prev_price) + '€' + ' a: ' + str(now_price) + '€' + '</p></body></html>','html','utf-8')
+    msg = MIMEText('<!DOCTYPE html><html><body><p>Mira el link: '+ URL +'</p><img src="'+imageSrc+'" /><br><br><p> Ha pasado de: ' + str(prev_price) + '€' + ' a: ' + str(now_price) + '€' + '</p></body></html>','html','utf-8')
     msg['From'] = from_addr
     msg['To'] = to_addr
     msg['Subject'] = Header(subject, 'utf-8').encode()
@@ -58,22 +58,26 @@ def check_price():
 
     divs = soup.find_all("div", class_="mod_addable_product")
     titles = soup.find_all(class_="heading-m")
+    images = soup.find_all(class_="promotion lazy")
     menus = {}
-    if(len(titles)==len(divs)): #Get menu titles
+    images_and_menus = {}
+    if len(titles)==len(divs): #Get menu titles
         for i in range(0, len(titles)):     #Creates a dictionary with the name of the product as Key and price as Value
+            title = titles[i].get_text()
             priceText = divs[i].findChildren("h3",recursive=False)[0].get_text()
             price = float(priceText.replace(",",".")[:-1])
-            menus[titles[i].get_text()] = price
+            menus[title] = price
+            images_and_menus[title] = images[i]['data-src']
 
     prev_menus = read_data()
     for key, value in menus.items():
-        if(menus[key]<prev_menus[key]):
-            send_email(key,prev_menus[key],menus[key])
+        if(menus[key]<prev_menus[key]):   #Sends email if the current price is lower than the previous one
+            send_email(key,prev_menus[key],menus[key],images_and_menus[key]) 
 
 
     #Saves dictionary onto a JSON file
     write_data(menus)
 
-while(True):
+while(True): #Checks price every 60 seconds
     check_price()
     time.sleep(60)
