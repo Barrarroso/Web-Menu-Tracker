@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 import time
 
-#TODO Better HTML Design
+#TODO Refactor
 
 #CONSTANTS
 URL = "https://www.telepizza.es/productos/menus"
@@ -42,7 +42,7 @@ def send_email(menu, prev_price, now_price, imageSrc):
     server.login(from_addr,password)
     subject = "Precio bajado en: " + menu
 
-    msg = MIMEText('<!DOCTYPE html><html><body><p>Mira el link: '+ URL +'</p><img src="'+imageSrc+'" /><br><br><p> Ha pasado de: ' + str(prev_price) + '€' + ' a: ' + str(now_price) + '€' + '</p></body></html>','html','utf-8')
+    msg = MIMEText('<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="text-align: center"><div style="background: #F2F2F2"><h1 style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:42px;line-height:50px;font-weight:700;letter-spacing:0;color:#4c4c4c">'+menu+'</h1><a href="'+URL+'" target="_blank" style="text-decoration: none"><img src="'+imageSrc+'" /></a><br><p style="font-family: fantasy;text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;font-size: 2em;color:#4c4c4c"><span style="color:#ff3d51">'+str(prev_price)+'</span> &#8594; <span style="color:#46fa70">'+str(now_price)+'</span></p><a href="'+URL+'" style="display:inline-block;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;line-height:19px;letter-spacing:0.4px;color:#ffffff;text-align:center;text-decoration:none;background-color:#1cb0f6;border-radius:14px;border-top:12px solid #1cb0f6;border-bottom:12px solid #1cb0f6;text-transform:uppercase; width:30%" target="_blank">Ve a comprobarlo</a><br><br><br></div></body></html>','html','utf-8')
     msg['From'] = from_addr
     msg['To'] = to_addr
     msg['Subject'] = Header(subject, 'utf-8').encode()
@@ -72,7 +72,7 @@ def check_price():
     prev_menus = read_data()
     for key, value in menus.items():
         if(menus[key]<prev_menus[key]):   #Sends email if the current price is lower than the previous one
-            send_email(key,prev_menus[key],menus[key],images_and_menus[key]) 
+            send_email(key,prev_menus[key],menus[key],images_and_menus[key])
 
 
     #Saves dictionary onto a JSON file
